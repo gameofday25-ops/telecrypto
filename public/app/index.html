@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeleCrypto WebApp</title>
+  <link rel="stylesheet" href="/app/styles.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header><h1>TeleCrypto</h1><small>MVP</small></header>
+  <nav>
+    <button data-tab="showcase" class="active">Витрина</button>
+    <button data-tab="collections">Подборки</button>
+    <button data-tab="cabinet">Кабинет</button>
+  </nav>
+
+  <main>
+    <section id="showcase" class="tab active">
+      <input id="search" placeholder="Поиск монеты" />
+      <div id="tokens"></div>
+    </section>
+    <section id="collections" class="tab"><div id="collectionsList"></div></section>
+    <section id="cabinet" class="tab">
+      <div id="me"></div>
+      <button id="testDeposit">Тестовое пополнение +100 USDT (PENDING)</button>
+      <button id="loadOrders">Обновить заявки</button>
+      <pre id="orders"></pre>
+    </section>
+  </main>
+
+  <aside>
+    <h3>Резерв</h3>
+    <div id="cart"></div>
+    <button id="createOrder">Создать заявку</button>
+  </aside>
+
+  <script src="/app/main.js"></script>
+</body>
+</html>
