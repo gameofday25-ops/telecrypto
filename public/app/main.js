@@ -15,7 +15,7 @@ function toast(message) {
   const el = $('toast');
   el.textContent = message;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2400);
+  setTimeout(() => el.classList.remove('show'), 2800);
 }
 
 async function api(path, method = 'GET', body = null) {
@@ -25,7 +25,14 @@ async function api(path, method = 'GET', body = null) {
     body: body ? JSON.stringify(body) : null,
   });
 
-  const data = await res.json();
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (_e) {
+    throw new Error(`Server returned non-JSON (${res.status}). Проверьте /api роутинг и PHP логи.`);
+  }
+
   if (!data.ok) {
     throw new Error(data.error?.message || 'API error');
   }
@@ -164,16 +171,12 @@ function renderRows(root, rows, renderer) {
 
 async function loadOrders() {
   const orders = await api('/orders/list');
-  renderRows($('orders'), orders, (o) => {
-    return `<span>#${o.id} · ${o.total_amount_usdt} USDT <span class="status ${o.status}">${o.status}</span></span><span>${new Date(o.created_at).toLocaleString()}</span>`;
-  });
+  renderRows($('orders'), orders, (o) => (`<span>#${o.id} · ${o.total_amount_usdt} USDT <span class="status ${o.status}">${o.status}</span></span><span>${new Date(o.created_at).toLocaleString()}</span>`));
 }
 
 async function loadDeposits() {
   const deposits = await api('/deposits/list');
-  renderRows($('deposits'), deposits, (d) => {
-    return `<span>#${d.id} · ${d.amount_usdt} USDT (${d.method}) <span class="status ${d.status}">${d.status}</span></span><span>${new Date(d.created_at).toLocaleString()}</span>`;
-  });
+  renderRows($('deposits'), deposits, (d) => (`<span>#${d.id} · ${d.amount_usdt} USDT (${d.method}) <span class="status ${d.status}">${d.status}</span></span><span>${new Date(d.created_at).toLocaleString()}</span>`));
 }
 
 $('search').addEventListener('input', (e) => loadTokens(e.target.value));
@@ -188,8 +191,29 @@ $('createDeposit').onclick = async () => {
     }
     const method = $('depositMethod').value;
     const result = await api('/deposits/create', 'POST', { amountUsdt: amount.toFixed(8), method });
-    toast(`Заявка на пополнение #${result.depositId} создана`);
+
+    if (result.payUrl) {
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(result.payUrl);
+      } else {
+        window.open(result.payUrl, '_blank');
+      }
+      toast(`Инвойс создан #${result.invoiceId}`);
+    } else {
+      toast(`Заявка на пополнение #${result.depositId} создана`);
+    }
+
     $('depositAmount').value = '';
+    await loadDeposits();
+  } catch (e) {
+    toast(e.message);
+  }
+};
+
+$('testTopup').onclick = async () => {
+  try {
+    const result = await api('/deposits/create', 'POST', { amountUsdt: '100.00000000', method: 'TEST' });
+    toast(`Тестовое пополнение создано #${result.depositId}`);
     await loadDeposits();
   } catch (e) {
     toast(e.message);

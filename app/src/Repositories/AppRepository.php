@@ -102,10 +102,10 @@ class AppRepository
         return true;
     }
 
-    public function createDeposit(int $userId, string $amount, string $method): int
+    public function createDeposit(int $userId, string $amount, string $method, ?string $externalId = null, ?string $payUrl = null): int
     {
-        $stmt = Db::conn()->prepare('INSERT INTO deposits (user_id, amount_usdt, method, status) VALUES (?, ?, ?, "PENDING")');
-        $stmt->execute([$userId, $amount, $method]);
+        $stmt = Db::conn()->prepare('INSERT INTO deposits (user_id, amount_usdt, method, status, external_id, pay_url) VALUES (?, ?, ?, "PENDING", ?, ?)');
+        $stmt->execute([$userId, $amount, $method, $externalId, $payUrl]);
         return (int)Db::conn()->lastInsertId();
     }
 
@@ -114,6 +114,38 @@ class AppRepository
         $stmt = Db::conn()->prepare('SELECT * FROM deposits WHERE user_id = ? ORDER BY created_at DESC');
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
+    }
+
+    public function getDepositByExternalId(string $externalId): ?array
+    {
+        $stmt = Db::conn()->prepare('SELECT * FROM deposits WHERE external_id = ? LIMIT 1');
+        $stmt->execute([$externalId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function markDepositPaidByExternalId(string $externalId): ?array
+    {
+        $db = Db::conn();
+        $stmt = $db->prepare('SELECT * FROM deposits WHERE external_id = ? LIMIT 1');
+        $stmt->execute([$externalId]);
+        $dep = $stmt->fetch();
+        if (!$dep || $dep['status'] !== 'PENDING') {
+            return null;
+        }
+
+        $db->beginTransaction();
+        try {
+            $db->prepare('UPDATE deposits SET status = "PAID", paid_at = NOW() WHERE id = ?')->execute([$dep['id']]);
+            $db->prepare('UPDATE balances SET available = available + ? WHERE user_id = ?')->execute([$dep['amount_usdt'], $dep['user_id']]);
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+
+        $stmt = $db->prepare('SELECT * FROM deposits WHERE id = ?');
+        $stmt->execute([$dep['id']]);
+        return $stmt->fetch() ?: null;
     }
 
     public function listOrders(int $userId): array

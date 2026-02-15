@@ -25,6 +25,8 @@ DB_PORT=%s
 DB_NAME=%s
 DB_USER=%s
 DB_PASS=%s
+CRYPTOBOT_API_TOKEN=%s
+CRYPTOBOT_WEBHOOK_SECRET=%s
 ",
         trim($_POST['BOT_TOKEN'] ?? ''),
         trim($_POST['WEBAPP_URL'] ?? ''),
@@ -33,7 +35,9 @@ DB_PASS=%s
         trim($_POST['DB_PORT'] ?? '3306'),
         trim($_POST['DB_NAME'] ?? ''),
         trim($_POST['DB_USER'] ?? ''),
-        trim($_POST['DB_PASS'] ?? '')
+        trim($_POST['DB_PASS'] ?? ''),
+        trim($_POST['CRYPTOBOT_API_TOKEN'] ?? ''),
+        trim($_POST['CRYPTOBOT_WEBHOOK_SECRET'] ?? '')
     );
 
     $root = dirname(__DIR__);
@@ -70,6 +74,8 @@ DB_PASS=%s
   <input name="DB_NAME" placeholder="db" required><br>
   <input name="DB_USER" placeholder="user" required><br>
   <input name="DB_PASS" placeholder="pass" required><br>
+  <input name="CRYPTOBOT_API_TOKEN" placeholder="CryptoBot API token (optional)"><br>
+  <input name="CRYPTOBOT_WEBHOOK_SECRET" placeholder="CryptoBot webhook secret"><br>
   <button>Сохранить</button>
 </form>
 </body></html>

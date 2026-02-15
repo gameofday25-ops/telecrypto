@@ -32,4 +32,9 @@ if ($path === '/bot.php') {
     exit;
 }
 
+if ($path === '/cryptobot.php') {
+    require __DIR__ . '/cryptobot.php';
+    exit;
+}
+
 readfile(__DIR__ . '/app/index.html');

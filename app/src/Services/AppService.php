@@ -81,7 +81,7 @@ class AppService
         return $this->repo->listOrders((int)$user['id']);
     }
 
-    public function createDeposit(int $telegramId, string $amount, string $method): int
+    public function createDeposit(int $telegramId, string $amount, string $method, ?string $externalId = null, ?string $payUrl = null): int
     {
         $user = $this->repo->getUserByTelegramId($telegramId);
         if (!$user) {
@@ -92,11 +92,12 @@ class AppService
         }
 
         $normalizedMethod = strtoupper(trim($method));
-        if ($normalizedMethod === 'TEST' || $normalizedMethod === '') {
-            throw new \RuntimeException('Use real payment method request (e.g. TRC20, ERC20, BANK)');
+        $allowedMethods = ['TEST', 'TRC20', 'ERC20', 'BANK', 'CRYPTOBOT'];
+        if (!in_array($normalizedMethod, $allowedMethods, true)) {
+            throw new \RuntimeException('Unsupported deposit method');
         }
 
-        return $this->repo->createDeposit((int)$user['id'], $amount, $normalizedMethod);
+        return $this->repo->createDeposit((int)$user['id'], $amount, $normalizedMethod, $externalId, $payUrl);
     }
 
     public function listDeposits(int $telegramId): array

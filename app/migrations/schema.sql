@@ -58,8 +58,11 @@ CREATE TABLE IF NOT EXISTS deposits (
   amount_usdt DECIMAL(18,8) NOT NULL,
   method VARCHAR(64) NOT NULL,
   status ENUM('PENDING','PAID','REJECTED') NOT NULL DEFAULT 'PENDING',
+  external_id VARCHAR(128) NULL,
+  pay_url VARCHAR(512) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   paid_at DATETIME NULL,
+  UNIQUE KEY uq_deposits_external_id (external_id),
   CONSTRAINT fk_deposits_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -123,10 +126,25 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 INSERT INTO tokens (name, symbol, chain, expected_listing_at, risk_level, description, source, is_active)
 VALUES
 ('NovaX', 'NVX', 'Ethereum', DATE_ADD(NOW(), INTERVAL 14 DAY), 'MEDIUM', 'AI infra token with upcoming CEX listing.', 'manual', 1),
-('Orbit Launch', 'ORBL', 'BSC', DATE_ADD(NOW(), INTERVAL 30 DAY), 'HIGH', 'Early-stage gaming token before public listing.', 'manual', 1);
+('Orbit Launch', 'ORBL', 'BSC', DATE_ADD(NOW(), INTERVAL 30 DAY), 'HIGH', 'Early-stage gaming token before public listing.', 'manual', 1),
+('LayerFox', 'LFOX', 'Arbitrum', DATE_ADD(NOW(), INTERVAL 21 DAY), 'MEDIUM', 'L2 analytics platform token.', 'manual', 1),
+('MetaSeed', 'MSEED', 'Polygon', DATE_ADD(NOW(), INTERVAL 11 DAY), 'HIGH', 'GameFi token with seed allocation.', 'manual', 1),
+('QuantumPay', 'QPAY', 'Solana', DATE_ADD(NOW(), INTERVAL 18 DAY), 'MEDIUM', 'Payments rail for onchain merchants.', 'manual', 1),
+('DriftX', 'DRFX', 'Base', DATE_ADD(NOW(), INTERVAL 40 DAY), 'HIGH', 'Derivative infra before exchange listing.', 'manual', 1),
+('AsterNet', 'ASTR', 'Avalanche', DATE_ADD(NOW(), INTERVAL 26 DAY), 'LOW', 'Infrastructure and staking utility token.', 'manual', 1),
+('HydraLink', 'HYDL', 'Ethereum', DATE_ADD(NOW(), INTERVAL 35 DAY), 'MEDIUM', 'Cross-chain bridge liquidity token.', 'manual', 1),
+('PulseNode', 'PLSN', 'BSC', DATE_ADD(NOW(), INTERVAL 9 DAY), 'HIGH', 'Node rental ecosystem token.', 'manual', 1),
+('Orbital AI', 'ORAI', 'Arbitrum', DATE_ADD(NOW(), INTERVAL 28 DAY), 'MEDIUM', 'AI compute marketplace token.', 'manual', 1),
+('BlueMint', 'BLMT', 'Polygon', DATE_ADD(NOW(), INTERVAL 16 DAY), 'LOW', 'NFT infra token with utility burns.', 'manual', 1),
+('VectorEx', 'VTRX', 'Solana', DATE_ADD(NOW(), INTERVAL 22 DAY), 'HIGH', 'Order routing / DEX infra token.', 'manual', 1);
 
 INSERT INTO collections (title, description, is_active)
-VALUES ('Early Picks', 'Топ идеи по ранним листингам', 1);
+VALUES
+('Early Picks', 'Топ идеи по ранним листингам', 1),
+('Diversified Basket', '10 тестовых тикеров для резерва', 1);
 
 INSERT INTO collection_items (collection_id, token_id, sort)
-VALUES (1, 1, 1), (1, 2, 2);
+VALUES
+(1, 1, 1), (1, 2, 2), (1, 3, 3), (1, 5, 4),
+(2, 3, 1), (2, 4, 2), (2, 5, 3), (2, 6, 4), (2, 7, 5),
+(2, 8, 6), (2, 9, 7), (2, 10, 8), (2, 11, 9), (2, 12, 10);

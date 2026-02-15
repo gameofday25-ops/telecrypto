@@ -1,99 +1,69 @@
 # TeleCrypto (Telegram Bot + WebApp) for shared hosting
 
-Production-ready MVP на PHP 8.1+/MySQL без Docker/Node/Redis.
+MVP на PHP 8.1+/MySQL без Docker/Node/Redis.
 
-## Что пошло не так в вашем деплое (почему видите `Index of /111`)
+## Почему была ошибка `Unexpected end of JSON input`
 
-Вы открываете **корень каталога с архивом**, а не front-controller приложения.
+На фронте это происходило, когда backend отдавал HTML/fatal вместо JSON (например, падение БД до формирования JSON-ответа).
 
-Обычно причина одна из двух:
+Что исправлено:
+- API теперь обернут в общий `try/catch` и даже при исключениях возвращает JSON формата `{ok:false,error:{...}}`.
+- Frontend теперь безопасно парсит ответ и выводит понятное сообщение, если backend вернул не-JSON.
 
-1. `DocumentRoot` указывает на папку проекта (где `app/`, `public/`, `install/`), а должен указывать на `public/`.
-2. В BotFather в WebApp URL указан путь типа `https://domain.com/111` вместо `https://domain.com/111/public/app/` (или просто `https://domain.com/app/`, если `public` уже DocumentRoot).
+## Что добавлено по вашему запросу
 
-В этой версии добавлен fallback (`index.php` в корне + `.htaccess`), чтобы даже при DocumentRoot=repo-root проект не показывал directory listing, а отдавал приложение.
-
----
+- Вернул **тестовое пополнение** (`method=TEST`) в кабинете.
+- Добавил **10+ тестовых тикеров** в сиды (`schema.sql`), их можно резервировать.
+- Добавил оплату через **CryptoBot**:
+  - создание инвойса через Crypto Pay API;
+  - сохранение `invoice_id`/`pay_url` в `deposits`;
+  - webhook `/cryptobot.php?secret=...` для авто-зачисления `invoice_paid`.
 
 ## Структура
 
-- `app/src` — backend-код (конфиг, DB, сервисы, репозитории, безопасность).
-- `public/index.php` — роутер.
-- `public/bot.php` — Telegram webhook endpoint.
-- `public/api/index.php` — JSON API.
-- `public/app/*` — статический WebApp.
-- `public/admin/index.php` — админка.
-- `app/migrations/schema.sql` — схема и сиды.
-- `install/install.php` — веб-мастер установки.
+- `public/bot.php` — Telegram webhook.
+- `public/cryptobot.php` — CryptoBot webhook.
+- `public/api/index.php` — API.
+- `public/app/*` — WebApp статик.
+- `app/migrations/schema.sql` — схема + сиды.
 
-## Установка по шагам (FTP + SQL)
+## Установка
 
-1. **Создайте БД MySQL** в cPanel/ISPmanager.
-2. **Импортируйте SQL** из `app/migrations/schema.sql` через phpMyAdmin.
-3. **Залейте файлы по FTP** в директорию сайта.
-4. Рекомендуется настроить **DocumentRoot** на `public/`.
-   - Если это невозможно — оставьте корень репозитория, `.htaccess`/`index.php` уже добавлены как fallback.
-5. Откройте `https://domain.com/install/install.php`, заполните форму и сохраните `.env`.
-6. Проверьте SSL: Telegram требует **https**.
+1. Импортируйте `app/migrations/schema.sql`.
+2. Залейте проект по FTP.
+3. Рекомендуемый `DocumentRoot` = `public/`.
+4. Заполните `.env` (или через `/install/install.php`).
 
-## Настройка Telegram webhook
+## .env (дополнительно)
+
+```env
+CRYPTOBOT_API_TOKEN=
+CRYPTOBOT_WEBHOOK_SECRET=change_me_secret
+```
+
+## Telegram webhook
 
 ```bash
 https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://domain.com/bot.php
 ```
 
-> Если проект в подпапке (`/111/public`), то webhook: `https://domain.com/111/public/bot.php`.
+## CryptoBot webhook
 
-## Настройка BotFather WebApp URL
+Укажите в Crypto Pay API/кабинете webhook:
 
-Укажите реальный URL WebApp:
+```text
+https://domain.com/cryptobot.php?secret=YOUR_SECRET
+```
+
+## BotFather WebApp URL
 
 - если `public` = DocumentRoot: `https://domain.com/app/`
-- если сайт в подпапке: `https://domain.com/111/public/app/`
-
-## Доступные команды бота
-
-- `/start` — регистрация и кнопка “Открыть приложение”.
-- `/help`
-- `/orders`
-- `/wallet`
-- `/support` — уведомление админам из `ADMIN_IDS`.
-
-## API endpoints
-
-Все под `/api`:
-
-- `GET /me`
-- `GET /tokens?search=&active=1`
-- `GET /tokens/{id}`
-- `GET /collections`
-- `POST /favorites/toggle`
-- `POST /orders/create`
-- `GET /orders/list`
-- `GET /deposits/list`
-- `POST /deposits/create` (только реальный метод, без TEST)
-
-Admin:
-
-- `POST /admin/token/create`
-- `POST /admin/token/update`
-- `POST /admin/collection/create`
-- `POST /admin/collection/update`
-- `POST /admin/order/status`
-- `POST /admin/deposit/approve`
-
-## Безопасность
-
-- Проверка подписи `initData` Telegram WebApp (`HMAC SHA-256`) в `Security.php`.
-- PDO prepared statements.
-- Rate-limit (IP + endpoint) через таблицу `rate_limits`.
-- Логи и ротация по размеру — `app/storage/logs/app.log`.
-- `.env` защищен через `.htaccess`.
+- если подпапка: `https://domain.com/111/public/app/`
 
 ## Мини-чеклист после установки
 
-1. `GET https://domain.com/health` → `{ok:true,status:"up"}`.
-2. `POST https://domain.com/bot.php` (webhook) отвечает `ok`.
-3. Открыть WebApp из Telegram: загрузились профиль, витрина, подборки.
-4. Создать заявку на пополнение (PENDING), затем одобрить в `/admin/`.
-5. Создать ордер из корзины и сменить статус через админку.
+1. `GET /health` -> `{ok:true,status:"up"}`
+2. Открыть WebApp из Telegram.
+3. Сделать тестовое пополнение (+100) и проверить в списке.
+4. Создать инвойс CryptoBot и оплатить (статус должен перейти в `PAID` после webhook).
+5. Создать резерв (order) из выбранных тикеров.
