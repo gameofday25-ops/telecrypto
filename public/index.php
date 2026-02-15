@@ -5,6 +5,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/src/bootstrap.php';
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+$baseDir = rtrim(str_replace('index.php', '', $scriptName), '/');
+if ($baseDir !== '' && str_starts_with($path, $baseDir)) {
+    $path = substr($path, strlen($baseDir)) ?: '/';
+}
 
 if ($path === '/health') {
     header('Content-Type: application/json');

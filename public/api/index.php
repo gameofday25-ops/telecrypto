@@ -15,6 +15,12 @@ use App\Src\Telegram;
 use App\Src\Providers\DbTokenProvider;
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '';
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+$base = preg_replace('#/api/index\.php$#', '', $scriptName) ?: '';
+if ($base !== '' && str_starts_with($path, $base)) {
+    $path = substr($path, strlen($base)) ?: '';
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 
@@ -25,14 +31,16 @@ if (!RateLimiter::check($ip, $path)) {
 $repo = new AppRepository();
 $service = new AppService($repo, new DbTokenProvider($repo));
 $adminService = new AdminService($repo, new Telegram((string)Config::get('BOT_TOKEN')));
-
 $input = getJsonInput();
 
 $needsAuth = !str_contains($path, '/api/admin/');
 $userTelegramId = null;
 if ($needsAuth) {
     $initData = $_SERVER['HTTP_X_TELEGRAM_INITDATA'] ?? ($_GET['initData'] ?? '');
-    if (!$initData) jsonResponse(false, null, 'UNAUTHORIZED', 'Missing initData', 401);
+    if (!$initData) {
+        jsonResponse(false, null, 'UNAUTHORIZED', 'Missing initData', 401);
+    }
+
     try {
         $user = Security::validateInitData($initData, (string)Config::get('BOT_TOKEN'));
         $userTelegramId = (int)$user['id'];
@@ -56,7 +64,7 @@ try {
         jsonResponse(true, $service->collections());
     }
     if ($method === 'POST' && $path === '/api/favorites/toggle') {
-        jsonResponse(true, ['favorite' => $service->toggleFavorite($userTelegramId, (int)$input['tokenId'])]);
+        jsonResponse(true, ['favorite' => $service->toggleFavorite($userTelegramId, (int)($input['tokenId'] ?? 0))]);
     }
     if ($method === 'POST' && $path === '/api/orders/create') {
         jsonResponse(true, ['orderId' => $service->createOrder($userTelegramId, $input['items'] ?? [])]);
@@ -68,7 +76,7 @@ try {
         jsonResponse(true, $service->listDeposits($userTelegramId));
     }
     if ($method === 'POST' && $path === '/api/deposits/create') {
-        jsonResponse(true, ['depositId' => $service->createDeposit($userTelegramId, (string)$input['amountUsdt'], (string)$input['method'])]);
+        jsonResponse(true, ['depositId' => $service->createDeposit($userTelegramId, (string)($input['amountUsdt'] ?? '0'), (string)($input['method'] ?? ''))]);
     }
 
     if (str_starts_with($path, '/api/admin/')) {
@@ -80,28 +88,20 @@ try {
             AdminAuth::requireAdmin($initData);
         }
 
-        if ($method === 'POST' && $path === '/api/admin/token/create') {
+        if ($method === 'POST' && in_array($path, ['/api/admin/token/create', '/api/admin/token/update'], true)) {
             $adminService->createOrUpdateToken($input);
             jsonResponse(true, ['saved' => true]);
         }
-        if ($method === 'POST' && $path === '/api/admin/token/update') {
-            $adminService->createOrUpdateToken($input);
-            jsonResponse(true, ['saved' => true]);
-        }
-        if ($method === 'POST' && $path === '/api/admin/collection/create') {
-            $adminService->createOrUpdateCollection($input);
-            jsonResponse(true, ['saved' => true]);
-        }
-        if ($method === 'POST' && $path === '/api/admin/collection/update') {
+        if ($method === 'POST' && in_array($path, ['/api/admin/collection/create', '/api/admin/collection/update'], true)) {
             $adminService->createOrUpdateCollection($input);
             jsonResponse(true, ['saved' => true]);
         }
         if ($method === 'POST' && $path === '/api/admin/order/status') {
-            $adminService->updateOrderStatus((int)$input['orderId'], (string)$input['status']);
+            $adminService->updateOrderStatus((int)($input['orderId'] ?? 0), (string)($input['status'] ?? ''));
             jsonResponse(true, ['saved' => true]);
         }
         if ($method === 'POST' && $path === '/api/admin/deposit/approve') {
-            $adminService->approveDeposit((int)$input['depositId']);
+            $adminService->approveDeposit((int)($input['depositId'] ?? 0));
             jsonResponse(true, ['saved' => true]);
         }
     }

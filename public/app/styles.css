@@ -1,1 +1,29 @@
-body{font-family:Arial;margin:0;background:#111;color:#f3f3f3}header,nav,main,aside{padding:12px}nav button{margin-right:8px}.tab{display:none}.tab.active{display:block}.card{background:#1f1f1f;border-radius:8px;padding:8px;margin:8px 0}input{padding:8px;width:100%;max-width:380px}button{padding:8px;border:0;border-radius:6px;cursor:pointer}.active{background:#4b72ff;color:#fff}
+:root{--bg:#0e111b;--panel:#171c2b;--muted:#96a0bf;--text:#eef2ff;--line:#2a3150;--accent:#4f7cff;--good:#22c55e;--bad:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#0a0d17,#11162a);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text)}
+.container{max-width:920px;margin:0 auto;padding:14px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+h1{margin:0;font-size:24px}.muted{margin:4px 0 0;color:var(--muted)}
+.badge{padding:8px 12px;background:#273154;border:1px solid #3d4a77;border-radius:999px;font-weight:700}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{background:transparent;border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer}
+.tabs button.active{background:var(--accent);border-color:var(--accent)}
+.tab{display:none}.tab.active{display:block}
+.search-row{margin-bottom:12px}
+input,select,button{font:inherit}
+input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0e1324;color:var(--text)}
+button{padding:10px 12px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+button.secondary{background:#2d3658}
+.grid{display:grid;gap:10px}
+.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.card-top{display:flex;justify-content:space-between;gap:8px;align-items:start}.token-title{font-weight:700}
+.token-meta{font-size:13px;color:var(--muted);margin:6px 0}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.status{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.status.PAID,.status.DISTRIBUTED,.status.EXECUTED{color:var(--good);border-color:#1f7a45}
+.status.REJECTED,.status.CANCELED,.status.REFUNDED{color:var(--bad);border-color:#7a1f2b}
+#cart .row,#orders .row,#deposits .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #2a3150}
+#cart .row:last-child,#orders .row:last-child,#deposits .row:last-child{border-bottom:0}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#12182b;border:1px solid #32406f;border-radius:8px;padding:10px 12px;display:none}
+.toast.show{display:block}
+@media (max-width:700px){.form-row{grid-template-columns:1fr}}

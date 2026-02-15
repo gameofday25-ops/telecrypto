@@ -4,12 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TeleCrypto WebApp</title>
-  <link rel="stylesheet" href="/app/styles.css" />
+  <link rel="stylesheet" href="./styles.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <header><h1>TeleCrypto</h1><small>MVP</small></header>
-  <nav>
+<div class="container">
+  <header class="header">
+    <div>
+      <h1>TeleCrypto</h1>
+      <p class="muted">Pre-listing кабинет</p>
+    </div>
+    <div id="balanceBadge" class="badge">—</div>
+  </header>
+
+  <nav class="tabs">
     <button data-tab="showcase" class="active">Витрина</button>
     <button data-tab="collections">Подборки</button>
     <button data-tab="cabinet">Кабинет</button>
@@ -17,24 +25,55 @@
 
   <main>
     <section id="showcase" class="tab active">
-      <input id="search" placeholder="Поиск монеты" />
-      <div id="tokens"></div>
+      <div class="search-row">
+        <input id="search" placeholder="Поиск по названию и тикеру" />
+      </div>
+      <div id="tokens" class="grid"></div>
     </section>
-    <section id="collections" class="tab"><div id="collectionsList"></div></section>
+
+    <section id="collections" class="tab">
+      <div id="collectionsList" class="grid"></div>
+    </section>
+
     <section id="cabinet" class="tab">
-      <div id="me"></div>
-      <button id="testDeposit">Тестовое пополнение +100 USDT (PENDING)</button>
-      <button id="loadOrders">Обновить заявки</button>
-      <pre id="orders"></pre>
+      <div id="meCard" class="panel"></div>
+
+      <div class="panel">
+        <h3>Пополнение (заявка на ручное зачисление)</h3>
+        <div class="form-row">
+          <input id="depositAmount" type="number" step="0.00000001" min="0" placeholder="Сумма USDT" />
+          <select id="depositMethod">
+            <option value="TRC20">USDT TRC20</option>
+            <option value="ERC20">USDT ERC20</option>
+            <option value="BANK">Банковский перевод</option>
+          </select>
+        </div>
+        <button id="createDeposit">Создать заявку на пополнение</button>
+      </div>
+
+      <div class="panel">
+        <h3>Мои заявки</h3>
+        <button id="loadOrders">Обновить</button>
+        <div id="orders"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Мои пополнения</h3>
+        <button id="loadDeposits">Обновить</button>
+        <div id="deposits"></div>
+      </div>
     </section>
   </main>
 
-  <aside>
+  <aside class="panel">
     <h3>Резерв</h3>
     <div id="cart"></div>
-    <button id="createOrder">Создать заявку</button>
+    <button id="createOrder">Оформить резерв</button>
   </aside>
 
-  <script src="/app/main.js"></script>
+  <div id="toast" class="toast"></div>
+</div>
+
+<script src="./main.js"></script>
 </body>
 </html>
