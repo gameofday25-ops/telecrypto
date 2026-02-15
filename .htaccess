@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Allow direct existing files/directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Fallback to public front controller when DocumentRoot is repo root
+  RewriteRule ^ public/index.php [L,QSA]
+</IfModule>
+
+<Files ".env">
+  Require all denied
+</Files>
